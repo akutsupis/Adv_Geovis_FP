@@ -1,0 +1,63 @@
+---
+title: "FP"
+author: "Akutsupis"
+date: "2023-11-30"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Imports
+library(readr)
+library(sf)
+```
+
+```{r}
+# This file is small enough to host and import straight from GitHub.
+data <- read_csv("estat_sdg_09_60_en.csv")
+```
+
+```{r}
+
+# URL to the shapefile ZIP
+url <- "http://ec.europa.eu/eurostat/cache/GISCO/geodatafiles/NUTS_2013_01M_SH.zip"
+
+# File name for the downloaded ZIP
+zip_file <- "NUTS_2013_01M_SH.zip"
+
+# Directory name for extracting the contents of the ZIP file
+extracted_dir <- "NUTS_2013_01M_SH"
+
+# File name for the shapefile
+shapefile_name <- "NUTS_RG_01M_2013.shp"
+
+# Download the ZIP file
+download.file(url, zip_file, mode = "wb")
+
+# Extract the contents of the ZIP file to a specific directory
+unzip(zip_file, exdir = extracted_dir)
+
+# Load the shapefile into R
+nuts_sf <- st_read(file.path(extracted_dir, "data", shapefile_name))
+
+# Save the shapefile to the working directory
+st_write(nuts_sf, "nuts_shapefile.shp")
+```
+
+```{r, packages}
+install.packages('rsconnect')
+```
+
+```{r}
+rsconnect::setAccountInfo(name='akutsupis',
+			  token='E500DAACDB2AC397B9286C1670C5B485',
+			  secret='8be5/z9H1v9W4fqbGe3w7HFb3nc0LOn3XiOyjHs/')
+```
+
+```{r}
+
+```
