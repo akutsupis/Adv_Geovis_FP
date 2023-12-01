@@ -10,11 +10,20 @@ runtime: shiny
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# Initial Setup
+
+## Import Statements
+
 ```{r}
 # Imports
 library(readr)
 library(sf)
+library(rsconnect)
+library(leaflet)
+library(shiny)
 ```
+
+## Data Import
 
 ```{r}
 # This file is small enough to host and import straight from GitHub.
@@ -22,7 +31,12 @@ data <- read_csv("estat_sdg_09_60_en.csv")
 ```
 
 ```{r}
+rsconnect::setAccountInfo(name='akutsupis',
+			  token='E500DAACDB2AC397B9286C1670C5B485',
+			  secret='8be5/z9H1v9W4fqbGe3w7HFb3nc0LOn3XiOyjHs/')
+```
 
+```{r}
 # URL to the shapefile ZIP
 url <- "http://ec.europa.eu/eurostat/cache/GISCO/geodatafiles/NUTS_2013_01M_SH.zip"
 
@@ -35,29 +49,87 @@ extracted_dir <- "NUTS_2013_01M_SH"
 # File name for the shapefile
 shapefile_name <- "NUTS_RG_01M_2013.shp"
 
-# Download the ZIP file
-download.file(url, zip_file, mode = "wb")
+# Output file name for the processed shapefile
+output_shapefile <- "nuts_shapefile.shp"
 
-# Extract the contents of the ZIP file to a specific directory
-unzip(zip_file, exdir = extracted_dir)
+# Check if the shapefile already exists
+if (!file.exists(output_shapefile)) {
+  # Download the ZIP file
+  download.file(url, zip_file, mode = "wb")
+  
+  # Create the extraction directory if it doesn't exist
+  if (!dir.exists(extracted_dir)) {
+    dir.create(extracted_dir)
+  }
+  
+  # Extract the contents of the ZIP file to the specific directory
+  unzip(zip_file, exdir = extracted_dir)
+  
+  # Load the shapefile into R
+  nuts_sf <- st_read(file.path(getwd(), "NUTS_2013_01M_SH", "NUTS_2013_01M_SH", "data", shapefile_name))
 
-# Load the shapefile into R
-nuts_sf <- st_read(file.path(extracted_dir, "data", shapefile_name))
-
-# Save the shapefile to the working directory
-st_write(nuts_sf, "nuts_shapefile.shp")
+  # Save the shapefile to the working directory
+  st_write(nuts_sf, output_shapefile)
+  
+  cat("Shapefile processed and saved.\n")
+} else {
+  cat("Shapefile already exists. No action taken.\n")
+}
 ```
 
-```{r, packages}
-install.packages('rsconnect')
+## Data Cleaning and Preparation
+
+```{r}
+# Filter to the country level
+nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 1, ]
+
+nuts_sf_filtered <- st_transform(nuts_sf_filtered, "+proj=longlat +datum=WGS84")
+
+# Select the first two characters as merge keys
+nuts_sf_filtered$CountryCode <- substr(nuts_sf_filtered$NUTS_ID, 1, 2)
+
+# Merge on country code keys
+merged_data <- merge(nuts_sf_filtered, data, by.x = "CountryCode", by.y = "geo", all.x = TRUE)
+
 ```
 
 ```{r}
-rsconnect::setAccountInfo(name='akutsupis',
-			  token='E500DAACDB2AC397B9286C1670C5B485',
-			  secret='8be5/z9H1v9W4fqbGe3w7HFb3nc0LOn3XiOyjHs/')
+# Define UI
+ui <- fluidPage(
+  titlePanel("EU Freight Movement Visualization"),
+  sliderInput("year_slider", "Select Year:",
+              min = min(merged_data$TIME_PERIOD, na.rm = TRUE),
+              max = max(merged_data$TIME_PERIOD, na.rm = TRUE),
+              value = min(merged_data$TIME_PERIOD, na.rm = TRUE),
+              step = 1, ticks = FALSE, sep = ''),
+  leafletOutput("map")
+)
+
 ```
 
 ```{r}
+# Define Server
+server <- function(input, output) {
+  # Filter data based on the selected year
+  filtered_data <- reactive({
+    req(input$year_slider)
 
+    merged_data[merged_data$TIME_PERIOD == input$year_slider, ]
+  })
+
+  observe({
+    print(filtered_data())  # Print the filtered data for debugging
+  })
+
+  output$map <- renderLeaflet({
+    # Create a leaflet map
+    leaflet() %>%
+      addProviderTiles("OpenStreetMap.Mapnik") %>%
+      addPolygons(data = filtered_data()
+      )
+  })
+}
+
+# Run the Shiny app
+shinyApp(ui, server)
 ```
