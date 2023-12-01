@@ -73,13 +73,16 @@ if (!file.exists(output_shapefile)) {
   
   cat("Shapefile processed and saved.\n")
 } else {
-  cat("Shapefile already exists. No action taken.\n")
+    nuts_sf <- st_read(file.path(getwd(), "NUTS_2013_01M_SH", "NUTS_2013_01M_SH", "data", shapefile_name))
+  cat("Shapefile already exists.\n")
 }
 ```
 
 ## Data Cleaning and Preparation
 
 ```{r}
+
+
 # Filter to the country level
 nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 1, ]
 
