@@ -129,12 +129,14 @@ server <- function(input, output) {
     leaflet() %>%
       addProviderTiles("OpenStreetMap.Mapnik") %>%
       addPolygons(data = filtered_data(),
-                  fillColor = "blue",
+                  fillColor = colorNumeric("Blues", domain = NULL)(filtered_data()$OBS_VALUE),
                   fillOpacity = 0.6,
                   weight = 2,
                   color = "white",
                   popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
-                                 "Freight Mode: ", filtered_data()$mode_of_freight)
+                                 "Freight Mode: ", filtered_data()$tra_mode,"<br>",
+                                 "Percent: ", filtered_data()$OBS_VALUE
+                                 )
       )
   })
 }
