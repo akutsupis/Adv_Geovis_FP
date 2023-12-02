@@ -120,9 +120,9 @@ server <- function(input, output) {
     merged_data[merged_data$TIME_PERIOD == input$year_slider, ]
   })
 
-  observe({
-    print(filtered_data())  # Print the filtered data for debugging
-  })
+  # observe({
+  #   print(filtered_data())  # Print the filtered data for debugging
+  # })
 
   output$map <- renderLeaflet({
     # Create a leaflet map
