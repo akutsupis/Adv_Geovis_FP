@@ -28,6 +28,7 @@ library(shiny)
 ```{r}
 # This file is small enough to host and import straight from GitHub.
 data <- read_csv("estat_sdg_09_60_en.csv")
+nuts_sf <- st_read('nuts_shapefile.shp')
 ```
 
 ```{r}
@@ -36,53 +37,9 @@ rsconnect::setAccountInfo(name='akutsupis',
 			  secret='8be5/z9H1v9W4fqbGe3w7HFb3nc0LOn3XiOyjHs/')
 ```
 
-```{r}
-# URL to the shapefile ZIP
-url <- "http://ec.europa.eu/eurostat/cache/GISCO/geodatafiles/NUTS_2013_01M_SH.zip"
-
-# File name for the downloaded ZIP
-zip_file <- "NUTS_2013_01M_SH.zip"
-
-# Directory name for extracting the contents of the ZIP file
-extracted_dir <- "NUTS_2013_01M_SH"
-
-# File name for the shapefile
-shapefile_name <- "NUTS_RG_01M_2013.shp"
-
-# Output file name for the processed shapefile
-output_shapefile <- "nuts_shapefile.shp"
-
-# Check if the shapefile already exists
-if (!file.exists(output_shapefile)) {
-  # Download the ZIP file
-  download.file(url, zip_file, mode = "wb")
-  
-  # Create the extraction directory if it doesn't exist
-  if (!dir.exists(extracted_dir)) {
-    dir.create(extracted_dir)
-  }
-  
-  # Extract the contents of the ZIP file to the specific directory
-  unzip(zip_file, exdir = extracted_dir)
-  
-  # Load the shapefile into R
-  nuts_sf <- st_read(file.path(getwd(), "NUTS_2013_01M_SH", "NUTS_2013_01M_SH", "data", shapefile_name))
-
-  # Save the shapefile to the working directory
-  st_write(nuts_sf, output_shapefile)
-  
-  cat("Shapefile processed and saved.\n")
-} else {
-    nuts_sf <- st_read(file.path(getwd(), "NUTS_2013_01M_SH", "NUTS_2013_01M_SH", "data", shapefile_name))
-  cat("Shapefile already exists.\n")
-}
-```
-
 ## Data Cleaning and Preparation
 
 ```{r}
-
-
 # Filter to the country level
 nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 1, ]
 
