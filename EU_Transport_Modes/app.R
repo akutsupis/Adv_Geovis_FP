@@ -37,35 +37,48 @@ ui <- fluidPage(
 )
 
 # Define Server
-server <- function(input, output) {
-  # Filter data based on the selected year
+server <- function(input, output, session) {
+  # Filter data based on the selected year and drop NAs
   filtered_data <- reactive({
     req(input$year_slider)
-    
-    merged_data[merged_data$TIME_PERIOD == input$year_slider, ]
+    na.omit(merged_data[merged_data$TIME_PERIOD == input$year_slider, ])
   })
   
-  # observe({
-  #   print(filtered_data())  # Print the filtered data for debugging
-  # })
+  colorpal <- reactive({
+    colorNumeric("Blues", merged_data$OBS_VALUE)
+  })
   
+  # Create leaflet map with static elements
   output$map <- renderLeaflet({
-    # Create a leaflet map
     leaflet() %>%
-      addProviderTiles("OpenStreetMap.Mapnik") %>%
+      addProviderTiles(providers$CartoDB.Positron) %>%
       addPolygons(data = filtered_data(),
-                  fillColor = colorNumeric("Blues", domain = NULL)(filtered_data()$OBS_VALUE),
+                  fillColor = colorpal()(filtered_data()$OBS_VALUE),
                   fillOpacity = 0.6,
                   weight = 2,
                   color = "white",
                   popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
-                                 "Freight Mode: ", filtered_data()$tra_mode,"<br>",
-                                 "Percent: ", filtered_data()$OBS_VALUE
-                  )
+                                 "Freight Mode: ", filtered_data()$tra_mode, "<br>",
+                                 "Percent: ", filtered_data()$OBS_VALUE)
+      )
+  })
+  
+  
+  # Observe changes in filtered_data and update the map
+  observe({
+    pal <- colorpal()
+    leafletProxy("map", data = filtered_data()) %>%
+      clearShapes() %>%
+      addPolygons(fillColor = ~pal(OBS_VALUE), fillOpacity = 0.6,
+                  weight = 2, color = "white",
+                  popup = ~paste("Country: ", CountryCode, "<br>",
+                                 "Freight Mode: ", tra_mode, "<br>",
+                                 "Percent: ", OBS_VALUE)
       )
   })
 }
 
 # Run the Shiny app
 shinyApp(ui, server)
+
 

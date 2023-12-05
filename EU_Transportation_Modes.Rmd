@@ -64,72 +64,36 @@ ui <- fluidPage(
               step = 1, ticks = FALSE, sep = ''),
   leafletOutput("map")
 )
-
-```
-
-```{r}
-# Define Server
-server <- function(input, output) {
-  # Filter data based on the selected year
-  filtered_data <- reactive({
-    req(input$year_slider)
-
-    merged_data[merged_data$TIME_PERIOD == input$year_slider, ]
-  })
-
-  # observe({
-  #   print(filtered_data())  # Print the filtered data for debugging
-  # })
-
-  output$map <- renderLeaflet({
-    # Create a leaflet map
-    leaflet() %>%
-      addProviderTiles("OpenStreetMap.Mapnik") %>%
-      addPolygons(data = filtered_data(),
-                  fillColor = colorNumeric("Blues", domain = NULL)(filtered_data()$OBS_VALUE),
-                  fillOpacity = 0.6,
-                  weight = 2,
-                  color = "white",
-                  popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
-                                 "Freight Mode: ", filtered_data()$tra_mode,"<br>",
-                                 "Percent: ", filtered_data()$OBS_VALUE
-                                 )
-      )
-  })
-}
-
-# Run the Shiny app
-shinyApp(ui, server)
 ```
 
 ```{r}
 # Define Server
 server <- function(input, output, session) {
-  # Filter data based on the selected year
+  # Filter data based on the selected year and drop NAs
   filtered_data <- reactive({
     req(input$year_slider)
-    nuts_sf_filtered[nuts_sf_filtered$TIME_PERIOD == input$year_slider, ]
+    na.omit(merged_data[merged_data$TIME_PERIOD == input$year_slider, ])
   })
 
   colorpal <- reactive({
-    colorNumeric("Blues", nuts_sf_filtered$OBS_VALUE)
+    colorNumeric("Blues", merged_data$OBS_VALUE)
   })
 
-  # Create leaflet map with static elements
-  output$map <- renderLeaflet({
-    leaflet() %>%
-      addProviderTiles("Stamen.Toner") %>%
-      addPolygons(data = filtered_data(),
-                  fillColor = colorpal()(filtered_data()$OBS_VALUE),
-                  fillOpacity = 0.6,
-                  weight = 2,
-                  color = "white",
-                  popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
-                                 "Freight Mode: ", filtered_data()$tra_mode, "<br>",
-                                 "Percent: ", filtered_data()$OBS_VALUE)
-      ) %>%
-      fitBounds(~min(long), ~min(lat), ~max(long), ~max(lat))
-  })
+# Create leaflet map with static elements
+output$map <- renderLeaflet({
+  leaflet() %>%
+    addProviderTiles(providers$CartoDB.Positron) %>%
+    addPolygons(data = filtered_data(),
+                fillColor = colorpal()(filtered_data()$OBS_VALUE),
+                fillOpacity = 0.6,
+                weight = 2,
+                color = "white",
+                popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
+                               "Freight Mode: ", filtered_data()$tra_mode, "<br>",
+                               "Percent: ", filtered_data()$OBS_VALUE)
+    )
+})
+
 
   # Observe changes in filtered_data and update the map
   observe({
@@ -147,5 +111,6 @@ server <- function(input, output, session) {
 
 # Run the Shiny app
 shinyApp(ui, server)
+
 
 ```
