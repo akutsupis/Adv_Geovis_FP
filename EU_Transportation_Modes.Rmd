@@ -50,7 +50,6 @@ nuts_sf_filtered$CountryCode <- substr(nuts_sf_filtered$NUTS_ID, 1, 2)
 
 # Merge on country code keys
 merged_data <- merge(nuts_sf_filtered, data, by.x = "CountryCode", by.y = "geo", all.x = TRUE)
-
 ```
 
 ```{r}
@@ -74,27 +73,28 @@ server <- function(input, output, session) {
     req(input$year_slider)
     na.omit(merged_data[merged_data$TIME_PERIOD == input$year_slider, ])
   })
-
+  
   colorpal <- reactive({
     colorNumeric("Blues", merged_data$OBS_VALUE)
   })
-
-# Create leaflet map with static elements
-output$map <- renderLeaflet({
-  leaflet() %>%
-    addProviderTiles(providers$CartoDB.Positron) %>%
-    addPolygons(data = filtered_data(),
-                fillColor = colorpal()(filtered_data()$OBS_VALUE),
-                fillOpacity = 0.6,
-                weight = 2,
-                color = "white",
-                popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
-                               "Freight Mode: ", filtered_data()$tra_mode, "<br>",
-                               "Percent: ", filtered_data()$OBS_VALUE)
-    )
-})
-
-
+  
+  # Create leaflet map with static elements
+  output$map <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles(providers$CartoDB.Positron) %>%
+      addPolygons(data = filtered_data(),
+                  fillColor = colorpal()(filtered_data()$OBS_VALUE),
+                  fillOpacity = 0.6,
+                  weight = 2,
+                  color = "white",
+                  popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
+                                 "Freight Mode: ", filtered_data()$tra_mode, "<br>",
+                                 "Percent: ", filtered_data()$OBS_VALUE)
+      )
+  })
+  
+  
+  
   # Observe changes in filtered_data and update the map
   observe({
     pal <- colorpal()
@@ -111,6 +111,5 @@ output$map <- renderLeaflet({
 
 # Run the Shiny app
 shinyApp(ui, server)
-
 
 ```
