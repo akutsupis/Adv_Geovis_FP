@@ -101,3 +101,51 @@ server <- function(input, output) {
 # Run the Shiny app
 shinyApp(ui, server)
 ```
+
+```{r}
+# Define Server
+server <- function(input, output, session) {
+  # Filter data based on the selected year
+  filtered_data <- reactive({
+    req(input$year_slider)
+    nuts_sf_filtered[nuts_sf_filtered$TIME_PERIOD == input$year_slider, ]
+  })
+
+  colorpal <- reactive({
+    colorNumeric("Blues", nuts_sf_filtered$OBS_VALUE)
+  })
+
+  # Create leaflet map with static elements
+  output$map <- renderLeaflet({
+    leaflet() %>%
+      addProviderTiles("Stamen.Toner") %>%
+      addPolygons(data = filtered_data(),
+                  fillColor = colorpal()(filtered_data()$OBS_VALUE),
+                  fillOpacity = 0.6,
+                  weight = 2,
+                  color = "white",
+                  popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
+                                 "Freight Mode: ", filtered_data()$tra_mode, "<br>",
+                                 "Percent: ", filtered_data()$OBS_VALUE)
+      ) %>%
+      fitBounds(~min(long), ~min(lat), ~max(long), ~max(lat))
+  })
+
+  # Observe changes in filtered_data and update the map
+  observe({
+    pal <- colorpal()
+    leafletProxy("map", data = filtered_data()) %>%
+      clearShapes() %>%
+      addPolygons(fillColor = ~pal(OBS_VALUE), fillOpacity = 0.6,
+                  weight = 2, color = "white",
+                  popup = ~paste("Country: ", CountryCode, "<br>",
+                                 "Freight Mode: ", tra_mode, "<br>",
+                                 "Percent: ", OBS_VALUE)
+      )
+  })
+}
+
+# Run the Shiny app
+shinyApp(ui, server)
+
+```
