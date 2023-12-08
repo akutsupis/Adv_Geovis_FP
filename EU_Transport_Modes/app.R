@@ -1,3 +1,5 @@
+# Source:
+# https://ec.europa.eu/eurostat/databrowser/view/nrg_ind_ren/default/table?lang=en
 
 # Imports
 library(readr)
