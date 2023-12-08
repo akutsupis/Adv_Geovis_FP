@@ -14,7 +14,7 @@ library(shiny)
 # This file is small enough to host and import straight from GitHub.
 data <- read_csv("nrg_ind_ren_page_linear.csv")
 nuts_sf <- st_read('nuts_shapefile.shp')
-countrycodes <- read_csv("countrycodes.csv")
+countrycodes <- read_csv("CountryCodes.csv")
 
 # Filter to the country level
 nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 1, ]
