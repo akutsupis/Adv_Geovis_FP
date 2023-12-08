@@ -7,12 +7,11 @@ library(leaflet)
 library(shiny)
 
 # This file is small enough to host and import straight from GitHub.
-data <- read_csv("estat_sdg_09_60_en.csv")
+data <- read_csv("nrg_ind_ren_page_linear.csv")
 nuts_sf <- st_read('nuts_shapefile.shp')
 
-rsconnect::setAccountInfo(name='akutsupis',
-                          token='E500DAACDB2AC397B9286C1670C5B485',
-                          secret='8be5/z9H1v9W4fqbGe3w7HFb3nc0LOn3XiOyjHs/')
+source("shiny_keys.R")
+connect()
 
 # Filter to the country level
 nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 1, ]
@@ -32,7 +31,7 @@ ui <- fluidPage(
               min = min(merged_data$TIME_PERIOD, na.rm = TRUE),
               max = max(merged_data$TIME_PERIOD, na.rm = TRUE),
               value = min(merged_data$TIME_PERIOD, na.rm = TRUE),
-              step = 1, ticks = FALSE, sep = ''),
+              step = 1, ticks = FALSE, sep = ','),
   leafletOutput("map")
 )
 
@@ -62,6 +61,7 @@ server <- function(input, output, session) {
                                  "Percent: ", filtered_data()$OBS_VALUE)
       )
   })
+  
   
   
   # Observe changes in filtered_data and update the map
