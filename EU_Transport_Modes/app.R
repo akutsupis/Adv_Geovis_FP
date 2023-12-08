@@ -42,7 +42,7 @@ ui <- fluidPage(
 
 # Define Server
 server <- function(input, output, session) {
-  # Filter data based on the selected year and drop NAs
+  # Filter data based on the selected year
   filtered_data <- reactive({
     req(input$year_slider)
     merged_data[merged_data$TIME_PERIOD == input$year_slider, ]
