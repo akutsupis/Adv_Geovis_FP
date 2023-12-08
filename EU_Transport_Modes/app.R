@@ -14,9 +14,7 @@ library(shiny)
 # This file is small enough to host and import straight from GitHub.
 data <- read_csv("nrg_ind_ren_page_linear.csv")
 nuts_sf <- st_read('nuts_shapefile.shp')
-
-
-
+countrycodes <- read_csv("countrycodes.csv")
 
 # Filter to the country level
 nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 1, ]
@@ -28,6 +26,8 @@ nuts_sf_filtered$CountryCode <- substr(nuts_sf_filtered$NUTS_ID, 1, 2)
 
 # Merge on country code keys
 merged_data <- merge(nuts_sf_filtered, data, by.x = "CountryCode", by.y = "geo", all.x = TRUE)
+
+merged_data <- merge(merged_data, countrycodes, by.x = "CountryCode", by.y = "CountryCode", all.x = TRUE)
 
 # Define UI
 ui <- fluidPage(
@@ -76,7 +76,7 @@ server <- function(input, output, session) {
       clearShapes() %>%
       addPolygons(fillColor = ~pal(OBS_VALUE), fillOpacity = 0.6,
                   weight = 2, color = "white",
-                  popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
+                  popup = ~paste("Country: ", filtered_data()$Name, "<br>",
                                  "Percent: ", filtered_data()$OBS_VALUE)
       )
   })
