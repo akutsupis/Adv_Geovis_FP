@@ -1,4 +1,6 @@
-source("shiny_keys.R")
+# To load keys to environment:
+# source("shiny_keys.R")
+# connect()
 # Source:
 # https://ec.europa.eu/eurostat/databrowser/view/nrg_ind_ren/default/table?lang=en
 
@@ -14,7 +16,7 @@ data <- read_csv("nrg_ind_ren_page_linear.csv")
 nuts_sf <- st_read('nuts_shapefile.shp')
 
 
-connect()
+
 
 # Filter to the country level
 nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 1, ]
@@ -82,4 +84,3 @@ server <- function(input, output, session) {
 
 # Run the Shiny app
 shinyApp(ui, server)
-
