@@ -31,10 +31,17 @@ merged_data <- merge(merged_data, countrycodes, by.x = "CountryCode", by.y = "Co
 
 # Define UI
 ui <- fluidPage(
-  titlePanel("Share of Renewable Energy"),
+  titlePanel("Share of Energy from Renewable Sources"),
+  tags$h4("Percent of Gross Final Energy Consumption"), ## Header
   checkboxInput("show_change", "Show change between years", FALSE),
-  uiOutput("year_input"),  
-  leafletOutput("map", width = "100%", height = "800px")
+  uiOutput("year_input"),  ## Slider or range input
+  leafletOutput("map", width = "100%", height = "800px"),
+  tags$hr(),  ## Horizontal line
+  tags$p("Sources:"),  ## Paragraph
+  tags$ul(
+    tags$li(tags$a(href = "https://ec.europa.eu/eurostat/databrowser/view/nrg_ind_ren/default/table?lang=en", "Eurostat Data")),
+    tags$li(tags$a(href = "https://github.com/akutsupis/Adv_Geovis_FP", "GitHub"))
+  )
 )
 
 # Define Server
@@ -51,12 +58,12 @@ server <- function(input, output, session) {
       sliderInput("year_range", "Select Years:", 
                   min = min(merged_data$TIME_PERIOD, na.rm = TRUE), 
                   max = max(merged_data$TIME_PERIOD, na.rm = TRUE), 
-                  value = c(min(merged_data$TIME_PERIOD, na.rm = TRUE), min(merged_data$TIME_PERIOD, na.rm = TRUE)+1), 
+                  value = c(min(merged_data$TIME_PERIOD, na.rm = TRUE), min(merged_data$TIME_PERIOD, na.rm = TRUE)+10), 
                   step = 1, sep = '')
     }
   })
   
-  # Filter data based on the selected year or range
+  ## Filter data based on the selected year or range
   filtered_data <- reactive({
     if(!input$show_change) { 
       merged_data[merged_data$TIME_PERIOD == input$year_slider, ]
@@ -65,7 +72,7 @@ server <- function(input, output, session) {
       start_year_data <- merged_data[merged_data$TIME_PERIOD == input$year_range[1], ] 
       end_year_data <- merged_data[merged_data$TIME_PERIOD == input$year_range[2], ] 
       percentage_change_data <- end_year_data
-      percentage_change_data$OBS_VALUE <- (end_year_data$OBS_VALUE - start_year_data$OBS_VALUE)
+      percentage_change_data$OBS_VALUE <- (round(end_year_data$OBS_VALUE - start_year_data$OBS_VALUE,2))
       percentage_change_data
     }
   })
@@ -86,7 +93,7 @@ server <- function(input, output, session) {
                   color = "white",
                   popup = paste("Country: ", filtered_data()$CountryCode, "<br>",
                                 if(!input$show_change) {"Percent: "} else {"Percent Change: "}, 
-                                filtered_data()$OBS_VALUE))
+                                round(filtered_data()$OBS_VALUE,digits=2)))
   })
   
   # Observe changes in filtered_data and update the map
@@ -97,7 +104,7 @@ server <- function(input, output, session) {
                   weight = 2, color = "white",
                   popup = paste("Country: ", filtered_data()$Name, "<br>",
                                 if(!input$show_change) {"Percent: "} else {"Percent Change: "}, 
-                                filtered_data()$OBS_VALUE))
+                                round(filtered_data()$OBS_VALUE,digits=2)))
   })
 }
 
