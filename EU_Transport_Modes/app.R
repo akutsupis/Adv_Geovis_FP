@@ -97,7 +97,7 @@ server <- function(input, output, session) {
                   color = "white",
                   popup = paste("Country: ", filtered_data()$CountryCode, "<br>",
                                 if(!input$show_change) {"Percent: "} else {"Percent Change: "}, 
-                                round(filtered_data()$OBS_VALUE,digits=2)))
+                                round(filtered_data()$OBS_VALUE,digits=2), {"%"}))
   })
   
   # Observe changes in filtered_data and update the map
@@ -108,7 +108,7 @@ server <- function(input, output, session) {
                   weight = 2, color = "white",
                   popup = paste("Country: ", filtered_data()$Name, "<br>",
                                 if(!input$show_change) {"Percent: "} else {"Percent Change: "}, 
-                                round(filtered_data()$OBS_VALUE,digits=2)))
+                                round(filtered_data()$OBS_VALUE,digits=2), {"%"}))
   })
 }
 
