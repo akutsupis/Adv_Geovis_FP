@@ -31,7 +31,7 @@ merged_data <- merge(merged_data, countrycodes, by.x = "CountryCode", by.y = "Co
 
 # Define UI
 ui <- fluidPage(
-  titlePanel("Share of Energy from Renewable Sources"),
+  titlePanel("EU Share of Energy from Renewable Sources"),
   tags$h4("Percent of Gross Final Energy Consumption"), ## Header
   checkboxInput("show_change", "Show change between years", FALSE),
   uiOutput("year_input"),  ## Slider or range input
@@ -58,7 +58,7 @@ server <- function(input, output, session) {
       sliderInput("year_range", "Select Years:", 
                   min = min(merged_data$TIME_PERIOD, na.rm = TRUE), 
                   max = max(merged_data$TIME_PERIOD, na.rm = TRUE), 
-                  value = c(min(merged_data$TIME_PERIOD, na.rm = TRUE), min(merged_data$TIME_PERIOD, na.rm = TRUE)+10), 
+                  value = c(min(merged_data$TIME_PERIOD, na.rm = TRUE), min(merged_data$TIME_PERIOD, na.rm = TRUE)+9), 
                   step = 1, sep = '')
     }
   })
