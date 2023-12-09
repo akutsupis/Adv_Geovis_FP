@@ -78,7 +78,11 @@ server <- function(input, output, session) {
   })
   
   colorpal <- reactive({
-    colorNumeric("Greens", filtered_data()$OBS_VALUE)
+    if(!input$show_change) {
+      colorBin("RdYlGn", filtered_data()$OBS_VALUE, bins = 10)
+    } else {
+      colorBin("RdYlGn", filtered_data()$OBS_VALUE, bins = 10)
+    }
   })
   
   # Create leaflet map with static elements
