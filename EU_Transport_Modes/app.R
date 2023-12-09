@@ -17,7 +17,7 @@ nuts_sf <- st_read('nuts_shapefile.shp')
 countrycodes <- read_csv("CountryCodes.csv")
 
 # Filter to the country level
-nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 1, ]
+nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 0, ]
 
 nuts_sf_filtered <- st_transform(nuts_sf_filtered, "+proj=longlat +datum=WGS84")
 
