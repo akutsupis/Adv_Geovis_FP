@@ -32,24 +32,46 @@ merged_data <- merge(merged_data, countrycodes, by.x = "CountryCode", by.y = "Co
 # Define UI
 ui <- fluidPage(
   titlePanel("Share of Renewable Energy"),
-  sliderInput("year_slider", "Select Year:",
-              min = min(merged_data$TIME_PERIOD, na.rm = TRUE),
-              max = max(merged_data$TIME_PERIOD, na.rm = TRUE),
-              value = min(merged_data$TIME_PERIOD, na.rm = TRUE),
-              step = 1, ticks = FALSE, sep = ''),
+  checkboxInput("show_change", "Show change between years", FALSE),
+  uiOutput("year_input"),  
   leafletOutput("map", width = "100%", height = "800px")
 )
 
 # Define Server
 server <- function(input, output, session) {
-  # Filter data based on the selected year
+  # Update the slider based on checkbox
+  output$year_input <- renderUI({
+    if(!input$show_change) { 
+      sliderInput("year_slider", "Select Year:",
+                  min = min(merged_data$TIME_PERIOD, na.rm = TRUE),
+                  max = max(merged_data$TIME_PERIOD, na.rm = TRUE),
+                  value = min(merged_data$TIME_PERIOD, na.rm = TRUE),
+                  step = 1, ticks = FALSE, sep = '')
+    } else {
+      sliderInput("year_range", "Select Years:", 
+                  min = min(merged_data$TIME_PERIOD, na.rm = TRUE), 
+                  max = max(merged_data$TIME_PERIOD, na.rm = TRUE), 
+                  value = c(min(merged_data$TIME_PERIOD, na.rm = TRUE), min(merged_data$TIME_PERIOD, na.rm = TRUE)+1), 
+                  step = 1, sep = '')
+    }
+  })
+  
+  # Filter data based on the selected year or range
   filtered_data <- reactive({
-    req(input$year_slider)
-    merged_data[merged_data$TIME_PERIOD == input$year_slider, ]
+    if(!input$show_change) { 
+      merged_data[merged_data$TIME_PERIOD == input$year_slider, ]
+    } else {
+      req(input$year_range)
+      start_year_data <- merged_data[merged_data$TIME_PERIOD == input$year_range[1], ] 
+      end_year_data <- merged_data[merged_data$TIME_PERIOD == input$year_range[2], ] 
+      percentage_change_data <- end_year_data
+      percentage_change_data$OBS_VALUE <- (end_year_data$OBS_VALUE - start_year_data$OBS_VALUE)
+      percentage_change_data
+    }
   })
   
   colorpal <- reactive({
-    colorNumeric("Greens", merged_data$OBS_VALUE)
+    colorNumeric("Greens", filtered_data()$OBS_VALUE)
   })
   
   # Create leaflet map with static elements
@@ -58,27 +80,24 @@ server <- function(input, output, session) {
       setView(lng = 11, lat = 52, zoom = 3.8) %>%
       addProviderTiles(providers$CartoDB.Positron) %>%
       addPolygons(data = filtered_data(),
-                  fillColor = colorpal(),
+                  fillColor = ~colorpal()(OBS_VALUE),
                   fillOpacity = 0.1,
                   weight = 2,
                   color = "white",
-                  popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
-                                 "Percent: ", filtered_data()$OBS_VALUE)
-      )
+                  popup = paste("Country: ", filtered_data()$CountryCode, "<br>",
+                                if(!input$show_change) {"Percent: "} else {"Percent Change: "}, 
+                                filtered_data()$OBS_VALUE))
   })
-  
-  
   
   # Observe changes in filtered_data and update the map
   observe({
-    pal <- colorpal()
     leafletProxy("map", data = filtered_data()) %>%
       clearShapes() %>%
-      addPolygons(fillColor = ~pal(OBS_VALUE), fillOpacity = 0.6,
+      addPolygons(fillColor = ~colorpal()(OBS_VALUE), fillOpacity = 0.6,
                   weight = 2, color = "white",
-                  popup = ~paste("Country: ", filtered_data()$Name, "<br>",
-                                 "Percent: ", filtered_data()$OBS_VALUE)
-      )
+                  popup = paste("Country: ", filtered_data()$Name, "<br>",
+                                if(!input$show_change) {"Percent: "} else {"Percent Change: "}, 
+                                filtered_data()$OBS_VALUE))
   })
 }
 
