@@ -32,8 +32,8 @@ merged_data <- merge(merged_data, countrycodes, by.x = "CountryCode", by.y = "Co
 # Define UI
 ui <- fluidPage(
   titlePanel("EU Share of Energy from Renewable Sources"),
-  tags$h4("Percent of Gross Final Energy Consumption"), ## Header
-  checkboxInput("show_change", "Show change between years", FALSE),
+  tags$h4("Percent of Gross Final Energy Consumption by Country"), ## Header
+  checkboxInput("show_change", "Compare percentage change between years", FALSE),
   uiOutput("year_input"),  ## Slider or range input
   leafletOutput("map", width = "100%", height = "800px"),
   tags$hr(),  ## Horizontal line
@@ -53,7 +53,7 @@ server <- function(input, output, session) {
                   min = min(merged_data$TIME_PERIOD, na.rm = TRUE),
                   max = max(merged_data$TIME_PERIOD, na.rm = TRUE),
                   value = min(merged_data$TIME_PERIOD, na.rm = TRUE),
-                  step = 1, ticks = FALSE, sep = '')
+                  step = 1, sep = '')
     } else {
       sliderInput("year_range", "Select Years:", 
                   min = min(merged_data$TIME_PERIOD, na.rm = TRUE), 
@@ -79,16 +79,16 @@ server <- function(input, output, session) {
   
   colorpal <- reactive({
     if(!input$show_change) {
-      colorBin("RdYlGn", filtered_data()$OBS_VALUE, bins = 10)
+      colorBin("RdYlGn", filtered_data()$OBS_VALUE, bins = 5)
     } else {
-      colorBin("RdYlGn", filtered_data()$OBS_VALUE, bins = 10)
+      colorBin("RdYlGn", filtered_data()$OBS_VALUE, bins = 5)
     }
   })
   
   # Create leaflet map with static elements
   output$map <- renderLeaflet({
     leaflet() %>%
-      setView(lng = 11, lat = 52, zoom = 3.8) %>%
+      setView(lng = 11, lat = 50, zoom = 3.8) %>%
       addProviderTiles(providers$CartoDB.Positron) %>%
       addPolygons(data = filtered_data(),
                   fillColor = ~colorpal()(OBS_VALUE),
