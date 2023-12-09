@@ -1,7 +1,7 @@
-# To load keys to environment:
+# To load keys to R environment:
 # source("shiny_keys.R")
 # connect()
-# Source:
+# Data source:
 # https://ec.europa.eu/eurostat/databrowser/view/nrg_ind_ren/default/table?lang=en
 
 # Imports
@@ -11,7 +11,7 @@ library(rsconnect)
 library(leaflet)
 library(shiny)
 
-# This file is small enough to host and import straight from GitHub.
+# These files are small enough to host and import straight from GitHub.
 data <- read_csv("nrg_ind_ren_page_linear.csv")
 nuts_sf <- st_read('nuts_shapefile.shp')
 countrycodes <- read_csv("CountryCodes.csv")
