@@ -55,11 +55,11 @@ server <- function(input, output, session) {
   # Create leaflet map with static elements
   output$map <- renderLeaflet({
     leaflet() %>%
-      setView(lng = 10, lat = 51, zoom = 3) %>%
+      setView(lng = 11, lat = 52, zoom = 3.8) %>%
       addProviderTiles(providers$CartoDB.Positron) %>%
       addPolygons(data = filtered_data(),
-                  fillColor = colorpal()(filtered_data()$OBS_VALUE),
-                  fillOpacity = 0.6,
+                  fillColor = colorpal(),
+                  fillOpacity = 0.1,
                   weight = 2,
                   color = "white",
                   popup = ~paste("Country: ", filtered_data()$CountryCode, "<br>",
