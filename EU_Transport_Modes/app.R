@@ -89,7 +89,7 @@ server <- function(input, output, session) {
   output$map <- renderLeaflet({
     leaflet() %>%
       setView(lng = 11, lat = 50, zoom = 3.8) %>%
-      addProviderTiles(providers$CartoDB.Positron) %>%
+      addProviderTiles(providers$CartoDB.Positron)  %>%
       addPolygons(data = filtered_data(),
                   fillColor = ~colorpal()(OBS_VALUE),
                   fillOpacity = 0.1,
@@ -97,15 +97,22 @@ server <- function(input, output, session) {
                   color = "white",
                   popup = paste("Country: ", filtered_data()$CountryCode, "<br>",
                                 if(!input$show_change) {"Percent: "} else {"Percent Change: "}, 
-                                round(filtered_data()$OBS_VALUE,digits=2), {"%"}))
+                                round(filtered_data()$OBS_VALUE,digits=2), {"%"})) %>%
+      addLegend(position = "topright",
+                pal = colorpal(),
+                values = filtered_data()$OBS_VALUE,
+                title = "Legend",
+                opacity = 1)
   })
   
   # Observe changes in filtered_data and update the map
   observe({
     leafletProxy("map", data = filtered_data()) %>%
       clearShapes() %>%
-      addPolygons(fillColor = ~colorpal()(OBS_VALUE), fillOpacity = 0.6,
-                  weight = 2, color = "white",
+      addPolygons(fillColor = ~colorpal()(OBS_VALUE),
+                  fillOpacity = 0.6,
+                  weight = 2,
+                  color = "white",
                   popup = paste("Country: ", filtered_data()$Name, "<br>",
                                 if(!input$show_change) {"Percent: "} else {"Percent Change: "}, 
                                 round(filtered_data()$OBS_VALUE,digits=2), {"%"}))
