@@ -45,7 +45,9 @@ ui <- fluidPage(
   tags$p("Sources:"),  ## Paragraph
   tags$ul(
     tags$li(tags$a(href = "https://ec.europa.eu/eurostat/databrowser/view/nrg_ind_ren/default/table?lang=en", "Eurostat Data")),
+    tags$li(tags$a(href = "https://ec.europa.eu/eurostat/cache/metadata/en/nrg_ind_share_esmsip2.htm", "Metadata")),
     tags$li(tags$a(href = "https://github.com/akutsupis/Adv_Geovis_FP", "GitHub"))
+
   )
 )
 
@@ -88,7 +90,7 @@ server <- function(input, output, session) {
       
       percent_change <- round(end_year_data$OBS_VALUE - start_year_data$OBS_VALUE, 2)
       
-      paste("From ", input$year_range[1], "to", input$year_range[2],
+      paste("From", input$year_range[1], "to", input$year_range[2],
             "total percent of gross renewable energy consumption within the European Union increased:", percent_change, "%")
     }
   })
@@ -131,7 +133,7 @@ server <- function(input, output, session) {
       addLegend(position = "topright",
                 pal = colorpal(),
                 values = filtered_data()$OBS_VALUE,
-                title = "Legend",
+                title = "Legend (%)",
                 opacity = 1)
   })
   
