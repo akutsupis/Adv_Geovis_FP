@@ -10,11 +10,14 @@ library(sf)
 library(rsconnect)
 library(leaflet)
 library(shiny)
+library(dplyr)
 
 # These files are small enough to host and import straight from GitHub.
 data <- read_csv("nrg_ind_ren_page_linear.csv")
 nuts_sf <- st_read('nuts_shapefile.shp')
 countrycodes <- read_csv("CountryCodes.csv")
+
+data <- subset(data, select = -c(OBS_FLAG))
 
 # Filter to the country level
 nuts_sf_filtered <- nuts_sf[nuts_sf$STAT_LEVL_ == 0, ]
@@ -33,8 +36,10 @@ merged_data <- merge(merged_data, countrycodes, by.x = "CountryCode", by.y = "Co
 ui <- fluidPage(
   titlePanel("EU Share of Energy from Renewable Sources"),
   tags$h4("Percent of Gross Final Energy Consumption by Country"), ## Header
-  checkboxInput("show_change", "Compare percentage change between years", FALSE),
+  tags$h6("Note change in legend values"), ## Header
+  checkboxInput("show_change", "Compare change between years", FALSE),
   uiOutput("year_input"),  ## Slider or range input
+  verbatimTextOutput('EU_Total'), # Overall EU statistics
   leafletOutput("map", width = "100%", height = "800px"),
   tags$hr(),  ## Horizontal line
   tags$p("Sources:"),  ## Paragraph
@@ -55,11 +60,36 @@ server <- function(input, output, session) {
                   value = min(merged_data$TIME_PERIOD, na.rm = TRUE),
                   step = 1, sep = '')
     } else {
-      sliderInput("year_range", "Select Years:", 
+      sliderInput("year_range", "Select Year Range:", 
                   min = min(merged_data$TIME_PERIOD, na.rm = TRUE), 
                   max = max(merged_data$TIME_PERIOD, na.rm = TRUE), 
                   value = c(min(merged_data$TIME_PERIOD, na.rm = TRUE), min(merged_data$TIME_PERIOD, na.rm = TRUE)+9), 
                   step = 1, sep = '')
+    }
+  })
+  
+  EU_Data <- reactive({
+    data[data$geo == "EU27_2020", ]
+  })
+  
+  output$EU_Total <- renderText({
+    if(!input$show_change) {
+      current_year <- ifelse(is.null(input$year_slider), min(EU_Data()$TIME_PERIOD, na.rm = TRUE), input$year_slider)
+      current_info <- EU_Data()[EU_Data()$TIME_PERIOD == current_year, ]
+      
+      paste(" Targets: 20% renewable energy by 2020, 32% renewable energy by 2030\n",
+            "Total percent of gross renewable energy consumption within the European Union,",
+            current_year, ":", round(first(current_info$OBS_VALUE), 2), "%")
+    } else {
+      req(input$year_range)
+      
+      start_year_data <- EU_Data()[EU_Data()$TIME_PERIOD == input$year_range[1], ]
+      end_year_data <- EU_Data()[EU_Data()$TIME_PERIOD == input$year_range[2], ]
+      
+      percent_change <- round(end_year_data$OBS_VALUE - start_year_data$OBS_VALUE, 2)
+      
+      paste("From ", input$year_range[1], "to", input$year_range[2],
+            "total percent of gross renewable energy consumption within the European Union increased:", percent_change, "%")
     }
   })
   
